@@ -126,19 +126,22 @@ def get_word_frequency(sentences):
 @click.option('-u', '--url', help='URL of the webpage', prompt=True)
 @click.option('-w', '--words', help='Individual word provided one by one', multiple=True)
 @click.option('-l', '--log', default=1, help='Use 0 to disable logs and 1 to enable logs', prompt=True)
-def cli(url, words, log):
+@click.option('-s', '--similar', default=5, help='To return the number of similar words. Default 5', prompt=True)
+def cli(url, words, log, similar):
     if log == 0:
         logging.disable(logging.INFO)
 
     s = get_corpus(url)
+
+    # Compute wordvec for the webpage corpus
     w2v = WordVecTrainer()
 
     cores = multiprocessing.cpu_count()-1
     w2v.train(s, cores=cores-1)
     for word in words:
-        similar_words = w2v.get_similar_words(word)
+        similar_words = w2v.get_similar_words(word, top_n=similar)
         if similar_words != -1:
-            s_ = ", ".join(similar_words)
+            s_ = " ".join(similar_words)
             print(word, ":", crayons.blue(s_))
         else:
             print(word, ":", crayons.red('NOT FOUND in the vocabulary. Please check the spelling'))
